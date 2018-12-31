@@ -14,7 +14,7 @@ import re
 # Format of the standard WhatsApp export line. This is likely to change in the
 # future and so this application will need to be updated.
 TIME_RE = '(?P<time>[\d:]+( [AP]M)?)'
-WHATSAPP_RE = ('(?P<date>[\d/-]+)'
+WHATSAPP_RE = ('(?P<date>[.\d/-]+)'
                ',? ' +
                TIME_RE +
                '( -|:) '
@@ -22,7 +22,7 @@ WHATSAPP_RE = ('(?P<date>[\d/-]+)'
                ': '
                '(?P<body>.*$)')
 
-FIRSTLINE_RE = ('(?P<date>[\d/-]+)'
+FIRSTLINE_RE = ('(?P<date>[.\d/-]+)'
                ',? ' +
                TIME_RE +
                '( -|:) '
@@ -45,7 +45,7 @@ def ParseLine(line):
     if m:
         d = dateutil.parser.parse("%s %s" % (m.group('date'),
             m.group('time')), dayfirst=True)
-        return d, "nobody", m.group('body')
+        return d, "", m.group('body')
     return None
 
 
