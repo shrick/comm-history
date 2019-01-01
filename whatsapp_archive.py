@@ -140,7 +140,9 @@ def FormatHTML(data):
             <span class="date">{{ messages[0][0] }}</span>
             <ol class="messages">
             {% for message in messages %}
-                <li>{{ message[2] | e }}</li>
+                {% for line in message[2].split("\n") %}
+                    <li>{{ line | e }}<br/></li>
+                {% endfor %}
             {% endfor %}
             </ol>
             </li>
