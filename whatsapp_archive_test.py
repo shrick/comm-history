@@ -17,7 +17,7 @@ INPUT_5 = ["19-02-18 17:02 - Los mensajes y llamadas en este chat ahora están "
            "protegidos con cifrado de extremo a extremo. Toca para más "
            "información.\n",
            "19-02-18 17:02 - human1: Hola\n",
-           "19-02-18 17:14 - human2: como estás?\n"]
+           "19.02.18 17:14 - human2: como estás?\n"]
 # Based on https://github.com/automatthias/whatsapp-archive/issues/1
 # 12-hour format.
 INPUT_6 = ["2016-06-27, 8:04:08 AM: Neil: Hi\n",]
@@ -51,13 +51,31 @@ class IdentifyMessagesTest(unittest.TestCase):
             'input_basename': 'fake_filename',
             'input_full_path': 'fake_filename'})
 
+    def testTemplateDataNoCollate(self):
+        messages = whatsapp_archive.IdentifyMessages(INPUT_3)
+        template_data = whatsapp_archive.TemplateData(messages, "fake_filename", False)
+        self.assertEqual(template_data, {
+            'by_user': [
+                ('Fake Name', [
+                    (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2')
+                ]),
+                ('Fake Name', [
+                    (datetime.datetime(2018, 1, 13, 1, 24), 'Fake Name', 'line3')
+                ]),
+                ('Name Two', [
+                    (datetime.datetime(2018, 1, 13, 1, 25), 'Name Two', 'single line')
+                ])
+            ],
+            'input_basename': 'fake_filename',
+            'input_full_path': 'fake_filename'})
+
     def testFirstLineNoColon(self):
         messages = whatsapp_archive.IdentifyMessages(INPUT_4)
         template_data = whatsapp_archive.TemplateData(messages, "fake_filename")
         self.assertEqual(template_data, {
             'by_user': [
-                ('nobody', [
-                    (datetime.datetime(2018, 4, 14, 22, 8), 'nobody', 'Nesta conversa, (…)'),
+                ('', [
+                    (datetime.datetime(2018, 4, 14, 22, 8), '', 'Nesta conversa, (…)'),
                 ]),
                 ('Alguém', [
                     (datetime.datetime(2018, 4, 14, 22, 8), 'Alguém', 'Olá!'),
@@ -72,9 +90,9 @@ class IdentifyMessagesTest(unittest.TestCase):
         template_data = whatsapp_archive.TemplateData(messages, "fake_filename")
         self.assertEqual(template_data, {
             'by_user': [
-                ('nobody', [
+                ('', [
                     (datetime.datetime(2018, 2, 19, 17, 2),
-                        'nobody', 'Los mensajes y llamadas en este chat ahora '
+                        '', 'Los mensajes y llamadas en este chat ahora '
                         'están protegidos con cifrado de extremo a extremo. '
                         'Toca para más información.'),
                 ]),

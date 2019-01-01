@@ -11,8 +11,12 @@ Requirements:
    * python3-dateutil (on Debian)
    * python2-jinja2
 
-On Linux, run this in shell. On Windows, run this in cmd.
+On Linux, run this in shell. On Windows, run this in cmd:
 
     ./whatsapp_archive.py -i your_file.txt -o output.html
+
+Or this with collating subsequent messages by same user:
+
+    ./whatsapp_archive.py -c -i your_file.txt -o output.html
 
 [saving]: https://faq.whatsapp.com/en/android/23756533/?category=5245251

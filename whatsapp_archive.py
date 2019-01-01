@@ -78,15 +78,19 @@ def IdentifyMessages(lines):
     return messages
 
 
-def TemplateData(messages, input_filename):
+def TemplateData(messages, input_filename, collate=True):
     """Create a struct suitable for procesing in a template.
     Returns:
         A dictionary of values.
     """
     by_user = []
     file_basename = os.path.basename(input_filename)
-    for user, msgs_of_user in itertools.groupby(messages, lambda x: x[1]):
-        by_user.append((user, list(msgs_of_user)))
+    if collate:
+        for user, msgs_of_user in itertools.groupby(messages, lambda x: x[1]):
+            by_user.append((user, list(msgs_of_user)))
+    else:
+        for msg in messages:
+            by_user.append((msg[1], [msg]))
     return dict(by_user=by_user, input_basename=file_basename,
             input_full_path=input_filename)
 
@@ -154,10 +158,11 @@ def main():
             'of a WhatsApp conversation')
     parser.add_argument('-i', dest='input_file', required=True)
     parser.add_argument('-o', dest='output_file', required=True)
+    parser.add_argument('-c', dest='collate', action='store_true')
     args = parser.parse_args()
     with open(args.input_file, 'rt', encoding='utf-8-sig') as fd:
         messages = IdentifyMessages(fd.readlines())
-    template_data = TemplateData(messages, args.input_file)
+    template_data = TemplateData(messages, args.input_file, args.collate)
     HTML = FormatHTML(template_data)
     with open(args.output_file, 'w', encoding='utf-8') as fd:
         fd.write(HTML)
