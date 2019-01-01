@@ -1,4 +1,4 @@
-# whatsapp-archive
+# whatsapp-html-history
 
 Format your exported WhatsApp conversation in HTML.
 
