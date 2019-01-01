@@ -11,98 +11,9 @@ import logging
 import os.path
 import re
 
-# Format of the standard WhatsApp export line. This is likely to change in the
-# future and so this application will need to be updated.
-TIME_RE = '(?P<time>[\d:]+( [AP]M)?)'
-WHATSAPP_RE = ('(?P<date>[.\d/-]+)'
-               ',? ' +
-               TIME_RE +
-               '( -|:) '
-               '(?P<name>[^:]+)'
-               ': '
-               '(?P<body>.*$)')
 
-FIRSTLINE_RE = ('(?P<date>[.\d/-]+)'
-               ',? ' +
-               TIME_RE +
-               '( -|:) '
-               '(?P<body>.*$)')
-
-
-class Error(Exception):
-    """Something bad happened."""
-
-
-def ParseLine(line):
-    """Parses a single line of WhatsApp export file."""
-    m = re.match(WHATSAPP_RE, line)
-    if m:
-        d = dateutil.parser.parse("%s %s" % (m.group('date'),
-            m.group('time')), dayfirst=True)
-        return d, m.group('name'), m.group('body')
-    # Maybe it's the first line which doesn't contain a person's name.
-    m = re.match(FIRSTLINE_RE, line)
-    if m:
-        d = dateutil.parser.parse("%s %s" % (m.group('date'),
-            m.group('time')), dayfirst=True)
-        return d, "", m.group('body')
-    return None
-
-
-def IdentifyMessages(lines):
-    """Input text can contain multi-line messages. If there's a line that
-    doesn't start with a date and a name, that's probably a continuation of the
-    previous message and should be appended to it.
-    """
-    messages = []
-    msg_date = None
-    msg_user = None
-    msg_body = None
-    for line in lines:
-        m = ParseLine(line)
-        if m is not None:
-            if msg_date is not None:
-                # We have a new message, so there will be no more lines for the
-                # one we've seen previously -- it's complete. Let's add it to
-                # the list.
-                messages.append((msg_date, msg_user, msg_body))
-            msg_date, msg_user, msg_body = m
-        else:
-            if msg_date is None:
-                raise Error("Can't parse the first line: " + repr(line) +
-                        ', regexes are ' + repr(FIRSTLINE_RE) + ' and ' + repr(WHATSAPP_RE))
-            msg_body += '\n' + line.strip()
-    # The last message remains. Let's add it, if it exists.
-    if msg_date is not None:
-        messages.append((msg_date, msg_user, msg_body))
-    return messages
-
-
-def TemplateData(messages, input_filename, collate=True):
-    """Create a struct suitable for procesing in a template.
-    Returns:
-        A dictionary of values.
-    """
-    by_user = []
-    file_basename = os.path.basename(input_filename)
-    if collate:
-        for user, msgs_of_user in itertools.groupby(messages, lambda x: x[1]):
-            by_user.append((user, list(msgs_of_user)))
-    else:
-        for msg in messages:
-            by_user.append((msg[1], [msg]))
-    return dict(by_user=by_user, input_basename=file_basename,
-            input_full_path=input_filename)
-
-
-def FormatHTML(data):
-    tmpl = """<!DOCTYPE html>
-    <html>
-    <head>
-        <title>WhatsApp archive {{ input_basename }}</title>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
+DEFAULT_CSS = "default.css"
+FALLBACK_CSS = """
             body {
                 font-family: sans-serif;
                 font-size: 10px;
@@ -129,10 +40,113 @@ def FormatHTML(data):
             span.date {
                 color: gray;
             }
+"""
+
+
+# Format of the standard WhatsApp export line. This is likely to change in the
+# future and so this application will need to be updated.
+TIME_RE = '(?P<time>[\d:]+( [AP]M)?)'
+WHATSAPP_RE = ('(?P<date>[.\d/-]+)'
+               ',? ' +
+               TIME_RE +
+               '( -|:) '
+               '(?P<name>[^:]+)'
+               ': '
+               '(?P<body>.*$)')
+
+FIRSTLINE_RE = ('(?P<date>[.\d/-]+)'
+               ',? ' +
+               TIME_RE +
+               '( -|:) '
+               '(?P<body>.*$)')
+
+
+class Error(Exception):
+    """Something bad happened."""
+
+
+def ParseLine(line):
+    """Parses a single line of WhatsApp export file."""
+    
+    # Try normal chat message
+    m = re.match(WHATSAPP_RE, line)
+    if m:
+        d = dateutil.parser.parse("%s %s" % (m.group('date'),
+            m.group('time')), dayfirst=True)
+        return d, m.group('name'), m.group('body')
+    
+    # Maybe it's the first line which doesn't contain a person's name.
+    m = re.match(FIRSTLINE_RE, line)
+    if m:
+        d = dateutil.parser.parse("%s %s" % (m.group('date'),
+            m.group('time')), dayfirst=True)
+        return d, "", m.group('body')
+    return None
+
+
+def IdentifyMessages(lines):
+    """Input text can contain multi-line messages. If there's a line that
+    doesn't start with a date and a name, that's probably a continuation of the
+    previous message and should be appended to it.
+    """
+    messages = []
+    msg_date = None
+    msg_user = None
+    msg_body = None
+    
+    for line in lines:
+        m = ParseLine(line)
+        if m is not None:
+            if msg_date is not None:
+                # We have a new message, so there will be no more lines for the
+                # one we've seen previously -- it's complete. Let's add it to
+                # the list.
+                messages.append((msg_date, msg_user, msg_body))
+            msg_date, msg_user, msg_body = m
+        else:
+            if msg_date is None:
+                raise Error("Can't parse the first line: " + repr(line) +
+                        ', regexes are ' + repr(FIRSTLINE_RE) + ' and ' + repr(WHATSAPP_RE))
+            msg_body += '\n' + line.strip()
+    
+    # The last message remains. Let's add it, if it exists.
+    if msg_date is not None:
+        messages.append((msg_date, msg_user, msg_body))
+    return messages
+
+
+def TemplateData(messages, input_filename, collate=True):
+    """Create a struct suitable for procesing in a template.
+    Returns:
+        A dictionary of values.
+    """
+    by_user = []
+    file_basename = os.path.basename(input_filename)
+    
+    if collate:
+        for user, msgs_of_user in itertools.groupby(messages, lambda x: x[1]):
+            by_user.append((user, list(msgs_of_user)))
+    else:
+        for msg in messages:
+            by_user.append((msg[1], [msg]))
+    
+    return dict(by_user=by_user, input_basename=file_basename,
+            input_full_path=input_filename)
+
+
+def FormatHTML(data, css):    
+    tmpl = """<!DOCTYPE html>
+    <html>
+    <head>
+        <title>WhatsApp archive {{ input_basename }}</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+        """ + css + """
         </style>
     </head>
     <body>
-        <h1>{{ input_basename }}</h1>
+        <h1 class ="input_file">{{ input_basename }}</h1>
         <ol class="users">
         {% for user, messages in by_user %}
             <li>
@@ -151,21 +165,37 @@ def FormatHTML(data):
     </body>
     </html>
     """
+    
     return jinja2.Environment().from_string(tmpl).render(**data)
 
 
 def main():
     logging.basicConfig(level=logging.INFO)
+    
     parser = argparse.ArgumentParser(description='Produce a browsable history '
             'of a WhatsApp conversation')
     parser.add_argument('-i', dest='input_file', required=True)
     parser.add_argument('-o', dest='output_file', required=True)
+    parser.add_argument('-s', dest='style_file', required=False)
     parser.add_argument('-c', dest='collate', action='store_true')
     args = parser.parse_args()
+    
     with open(args.input_file, 'rt', encoding='utf-8-sig') as fd:
         messages = IdentifyMessages(fd.readlines())
+    
+    style_file = DEFAULT_CSS if args.style_file is None else args.style_file
+    try:
+        with open(style_file, 'rt', encoding='utf-8-sig') as fd:
+            css = fd.read()
+    except IOError as e:
+        if args.style_file is not None:
+            raise e
+        else:
+            css = FALLBACK_CSS
+    
     template_data = TemplateData(messages, args.input_file, args.collate)
-    HTML = FormatHTML(template_data)
+    HTML = FormatHTML(template_data, css)
+    
     with open(args.output_file, 'w', encoding='utf-8') as fd:
         fd.write(HTML)
 
