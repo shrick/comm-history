@@ -13,7 +13,7 @@ h1.input_file {
   padding: 30px 40px;
 }
 .speech-wrapper .bubble {
-  #width: 240px;
+  width: auto;
   height: auto;
   display: block;
   background: #f5f5f5;
@@ -36,10 +36,24 @@ h1.input_file {
 }
 .speech-wrapper .bubble .txt .name span {
   font-weight: normal;
-  color: #34b7f1;
 }
-.speech-wrapper .bubble .txt .name.alt {
-  color: #2ecc71;
+.speech-wrapper .bubble .txt .name span.user1 {
+  color:blue;
+}
+.speech-wrapper .bubble .txt .name span.user2 {
+  color:green;
+}
+.speech-wrapper .bubble .txt .name span.user3 {
+  color:red;
+}
+.speech-wrapper .bubble .txt .name span.user4 {
+  color:brown;
+}
+.speech-wrapper .bubble .txt .name span.user5 {
+  color:purple;
+}
+.speech-wrapper .bubble .txt .name span.user6 {
+  color:yellow;
 }
 .speech-wrapper .bubble .txt .message {
   font-size: 14px;

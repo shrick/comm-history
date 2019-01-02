@@ -60,6 +60,15 @@ def IdentifyMessages(lines):
     previous message and should be appended to it.
     """
     messages = []
+    users = {}
+    numbers = itertools.count(1)
+    
+    def append_message(msg_date, msg_user, msg_body):
+        if msg_user and msg_user not in users:
+            users[msg_user] = next(numbers)
+        
+        messages.append((msg_date, msg_user, msg_body, users.get(msg_user, "")))
+    
     msg_date = None
     msg_user = None
     msg_body = None
@@ -71,7 +80,7 @@ def IdentifyMessages(lines):
                 # We have a new message, so there will be no more lines for the
                 # one we've seen previously -- it's complete. Let's add it to
                 # the list.
-                messages.append((msg_date, msg_user, msg_body))
+                append_message(msg_date, msg_user, msg_body)
             msg_date, msg_user, msg_body = m
         else:
             if msg_date is None:
@@ -81,7 +90,8 @@ def IdentifyMessages(lines):
     
     # The last message remains. Let's add it, if it exists.
     if msg_date is not None:
-        messages.append((msg_date, msg_user, msg_body))
+        append_message(msg_date, msg_user, msg_body)
+    
     return messages
 
 
@@ -119,7 +129,7 @@ def FormatHTML(data, css):
         {% for user, messages in by_user %}
             <div class="bubble">
                 <div class="txt">
-                    <p class="name">{{ user }}</p>
+                    <p class="name"><span class="user{{ messages[0][3] }}">{{ user }}</span></p>
                     <p class="message">
                     {% for message in messages %}
                         {% for line in message[2].split("\n") %}
