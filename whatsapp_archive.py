@@ -7,41 +7,11 @@ import datetime
 import dateutil.parser
 import itertools
 import jinja2
-import logging
 import os.path
 import re
 
 
 DEFAULT_CSS = "default.css"
-FALLBACK_CSS = """
-            body {
-                font-family: sans-serif;
-                font-size: 10px;
-            }
-            ol.users {
-                list-style-type: none;
-                list-style-position: inside;
-                margin: 0;
-                padding: 0;
-            }
-            ol.messages {
-                list-style-type: none;
-                list-style-position: inside;
-                margin: 0;
-                padding: 0;
-            }
-            ol.messages li {
-                margin-left: 1em;
-                font-size: 12px;
-            }
-            span.username {
-                color: gray;
-            }
-            span.date {
-                color: gray;
-            }
-"""
-
 
 # Format of the standard WhatsApp export line. This is likely to change in the
 # future and so this application will need to be updated.
@@ -141,27 +111,28 @@ def FormatHTML(data, css):
         <title>WhatsApp archive {{ input_basename }}</title>
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-        """ + css + """
-        </style>
+        <style>""" + css + """</style>
     </head>
     <body>
-        <h1 class ="input_file">{{ input_basename }}</h1>
-        <ol class="users">
+        <h1 class="input_file">{{ input_basename }}</h1>
+        <div class="speech-wrapper">
         {% for user, messages in by_user %}
-            <li>
-            <span class="username">{{ user }}</span>
-            <span class="date">{{ messages[0][0] }}</span>
-            <ol class="messages">
-            {% for message in messages %}
-                {% for line in message[2].split("\n") %}
-                    <li>{{ line | e }}<br/></li>
-                {% endfor %}
-            {% endfor %}
-            </ol>
-            </li>
+            <div class="bubble">
+                <div class="txt">
+                    <p class="name">{{ user }}</p>
+                    <p class="message">
+                    {% for message in messages %}
+                        {% for line in message[2].split("\n") %}
+                            {{ line | e }}<br/>
+                        {% endfor %}
+                    {% endfor %}
+                    </p>
+                    <p><span class="timestamp">{{ messages[0][0] }}</span></p>
+                </div>
+                <div class="bubble-arrow"></div>
+            </div>
         {% endfor %}
-        </ol>
+        </div>
     </body>
     </html>
     """
@@ -169,29 +140,23 @@ def FormatHTML(data, css):
     return jinja2.Environment().from_string(tmpl).render(**data)
 
 
-def main():
-    logging.basicConfig(level=logging.INFO)
-    
+def main():    
     parser = argparse.ArgumentParser(description='Produce a browsable history '
             'of a WhatsApp conversation')
     parser.add_argument('-i', dest='input_file', required=True)
     parser.add_argument('-o', dest='output_file', required=True)
-    parser.add_argument('-s', dest='style_file', required=False)
-    parser.add_argument('-c', dest='collate', action='store_true')
+    parser.add_argument('-s', dest='style_file', required=False, 
+                        default=DEFAULT_CSS,
+                        help='optional style file other than "' + DEFAULT_CSS + '"')
+    parser.add_argument('-c', dest='collate', action='store_true',
+                        help='if subsequent messages of same user should be combined')
     args = parser.parse_args()
     
     with open(args.input_file, 'rt', encoding='utf-8-sig') as fd:
         messages = IdentifyMessages(fd.readlines())
     
-    style_file = DEFAULT_CSS if args.style_file is None else args.style_file
-    try:
-        with open(style_file, 'rt', encoding='utf-8-sig') as fd:
-            css = fd.read()
-    except IOError as e:
-        if args.style_file is not None:
-            raise e
-        else:
-            css = FALLBACK_CSS
+    with open(args.style_file, 'rt', encoding='utf-8-sig') as fd:
+        css = fd.read()
     
     template_data = TemplateData(messages, args.input_file, args.collate)
     HTML = FormatHTML(template_data, css)

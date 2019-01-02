@@ -1,26 +1,81 @@
 body {
-    font-family: sans-serif;
-    font-size: 10px;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #dcf8c6;
 }
-ol.users {
-    list-style-type: none;
-    list-style-position: inside;
-    margin: 0;
-    padding: 0;
+
+h1.input_file {
+    font-size: 20px;
+    color: #075e54;
 }
-ol.messages {
-    list-style-type: none;
-    list-style-position: inside;
-    margin: 0;
-    padding: 0;
+
+.speech-wrapper {
+  padding: 30px 40px;
 }
-ol.messages li {
-    margin-left: 1em;
-    font-size: 12px;
+.speech-wrapper .bubble {
+  #width: 240px;
+  height: auto;
+  display: block;
+  background: #f5f5f5;
+  border-radius: 4px;
+  box-shadow: 2px 8px 5px #000;
+  position: relative;
+  margin: 0 0 25px;
 }
-span.username {
-    color: gray;
+.speech-wrapper .bubble.alt {
+  margin: 0 0 0 60px;
 }
-span.date {
-    color: gray;
+.speech-wrapper .bubble .txt {
+  padding: 8px 55px 8px 14px;
+}
+.speech-wrapper .bubble .txt .name {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 4px;
+  color: #3498db;
+}
+.speech-wrapper .bubble .txt .name span {
+  font-weight: normal;
+  color: #34b7f1;
+}
+.speech-wrapper .bubble .txt .name.alt {
+  color: #2ecc71;
+}
+.speech-wrapper .bubble .txt .message {
+  font-size: 14px;
+  margin: 0;
+  color: #2b2b2b;
+}
+.speech-wrapper .bubble .txt .timestamp {
+  font-size: 12px;
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  text-transform: uppercase;
+  color: #999;
+}
+.speech-wrapper .bubble .bubble-arrow {
+  position: absolute;
+  width: 0;
+  bottom: 42px;
+  left: -16px;
+  height: 0;
+}
+.speech-wrapper .bubble .bubble-arrow.alt {
+  right: -2px;
+  bottom: 40px;
+  left: auto;
+}
+.speech-wrapper .bubble .bubble-arrow:after {
+  content: "";
+  position: absolute;
+  border: 0 solid transparent;
+  border-top: 9px solid #f5f5f5;
+  border-radius: 0 20px 0;
+  width: 15px;
+  height: 30px;
+  transform: rotate(145deg);
+}
+.speech-wrapper .bubble .bubble-arrow.alt:after {
+  transform: rotate(45deg) scaleY(-1);
 }
