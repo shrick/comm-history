@@ -130,14 +130,16 @@ def FormatHTML(data, css):
             <div class="bubble">
                 <div class="txt">
                     <p class="name"><span class="user{{ messages[0][3] }}">{{ user }}</span></p>
-                    <p class="message">
                     {% for message in messages %}
+                    <div class="message">
+                        <p>
                         {% for line in message[2].split("\n") %}
-                            {{ line | e }}<br/>
+                            {{ line | e }}<br>
                         {% endfor %}
+                            <span class="timestamp">{{ message[0] }}</span>
+                        </p>
+                    </div>
                     {% endfor %}
-                    </p>
-                    <p><span class="timestamp">{{ messages[0][0] }}</span></p>
                 </div>
                 <div class="bubble-arrow"></div>
             </div>
