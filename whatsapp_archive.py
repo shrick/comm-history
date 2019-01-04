@@ -3,7 +3,6 @@
 """Reads a WhatsApp conversation export file and writes a HTML file."""
 
 import argparse
-import datetime
 import dateutil.parser
 import itertools
 import jinja2
@@ -68,11 +67,11 @@ def IdentifyMessages(lines):
         if msg_user and msg_user not in users:
             users[msg_user] = next(ids)
         
-        data = (msg_date, msg_user, msg_body, users.get(msg_user, ""))
+        msg = (msg_date, msg_user, msg_body, users.get(msg_user, ""))
         
         # check duplicate
-        if data not in messages:
-            messages.append(data)
+        if msg not in messages:
+            messages.append(msg)
     
     msg_date = None
     msg_user = None
