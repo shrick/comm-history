@@ -61,13 +61,18 @@ def IdentifyMessages(lines):
     """
     messages = []
     users = {}
-    numbers = itertools.count(1)
+    ids = itertools.count(1)
     
     def append_message(msg_date, msg_user, msg_body):
+        # assign user id
         if msg_user and msg_user not in users:
-            users[msg_user] = next(numbers)
+            users[msg_user] = next(ids)
         
-        messages.append((msg_date, msg_user, msg_body, users.get(msg_user, "")))
+        data = (msg_date, msg_user, msg_body, users.get(msg_user, ""))
+        
+        # check duplicate
+        if data not in messages:
+            messages.append(data)
     
     msg_date = None
     msg_user = None
