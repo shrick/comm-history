@@ -95,13 +95,14 @@ def IdentifyMessages(lines):
     return messages
 
 
-def TemplateData(messages, input_filename, collate=True):
+def TemplateData(messages, input_filenames, collate=True):
     """Create a struct suitable for procesing in a template.
     Returns:
         A dictionary of values.
     """
     by_user = []
-    file_basename = os.path.basename(input_filename)
+    file_basenames = [os.path.splitext(os.path.basename(f))[0]
+                      for f in input_filenames]
     
     if collate:
         for user, msgs_of_user in itertools.groupby(messages, lambda x: x[1]):
@@ -110,21 +111,23 @@ def TemplateData(messages, input_filename, collate=True):
         for msg in messages:
             by_user.append((msg[1], [msg]))
     
-    return dict(by_user=by_user, input_basename=file_basename,
-            input_full_path=input_filename)
+    return dict(by_user=by_user, input_basenames=file_basenames,
+                input_full_paths=input_filenames)
 
 
 def FormatHTML(data, css):    
     tmpl = """<!DOCTYPE html>
     <html>
     <head>
-        <title>WhatsApp archive {{ input_basename }}</title>
+        <title>{{ ", ".join(input_basenames) }}</title>
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>""" + css + """</style>
     </head>
     <body>
-        <h1 class="input_file">{{ input_basename }}</h1>
+        {% for input_file in input_basenames %}
+        <h1 class="input_file">{{ input_file }}</h1>
+        {% endfor %}
         <div class="speech-wrapper">
         {% for user, messages in by_user %}
             <div class="bubble">
@@ -155,17 +158,20 @@ def FormatHTML(data, css):
 def main():    
     parser = argparse.ArgumentParser(description='Produce a browsable history '
             'of a WhatsApp conversation')
-    parser.add_argument('-i', dest='input_file', required=True)
-    parser.add_argument('-o', dest='output_file', required=True)
+    parser.add_argument('-c', dest='collate', action='store_true',
+                        help='if subsequent messages of same user should be combined')
     parser.add_argument('-s', dest='style_file', required=False, 
                         default=DEFAULT_CSS,
                         help='optional style file other than "' + DEFAULT_CSS + '"')
-    parser.add_argument('-c', dest='collate', action='store_true',
-                        help='if subsequent messages of same user should be combined')
+    parser.add_argument('-i', dest='input_file', nargs='*', required=True)
+    parser.add_argument('-o', dest='output_file', required=True)
     args = parser.parse_args()
     
-    with open(args.input_file, 'rt', encoding='utf-8-sig') as fd:
-        messages = IdentifyMessages(fd.readlines())
+    lines = []
+    for input_file in args.input_file:
+        with open(input_file, 'rt', encoding='utf-8-sig') as fd:
+            lines += fd.readlines()
+    messages = IdentifyMessages(lines)
     
     with open(args.style_file, 'rt', encoding='utf-8-sig') as fd:
         css = fd.read()

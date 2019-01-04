@@ -7,6 +7,7 @@ body {
 h1.input_file {
     font-size: 20px;
     color: #075e54;
+    padding-left: 10px;
 }
 
 .speech-wrapper {
