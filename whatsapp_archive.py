@@ -11,6 +11,7 @@ import re
 
 
 DEFAULT_CSS = "default.css"
+DUPLICATE_TOLERANCE = 60    # seconds
 
 # Format of the standard WhatsApp export line. This is likely to change in the
 # future and so this application will need to be updated.
@@ -62,16 +63,25 @@ def IdentifyMessages(lines):
     users = {}
     ids = itertools.count(1)
     
+    def is_duplicate(msg_date, msg_user, msg_body):
+        for m in messages:
+            if (msg_user == m[1] and msg_body == m[2]):
+                delta = msg_date - m[0]  
+                if abs(delta.total_seconds()) <= DUPLICATE_TOLERANCE:
+                   return True
+        
+        return False
+    
     def append_message(msg_date, msg_user, msg_body):
+        if is_duplicate(msg_date, msg_user, msg_body):
+            return
+        
         # assign user id
         if msg_user and msg_user not in users:
             users[msg_user] = next(ids)
         
         msg = (msg_date, msg_user, msg_body, users.get(msg_user, ""))
-        
-        # check duplicate
-        if msg not in messages:
-            messages.append(msg)
+        messages.append(msg)
     
     msg_date = None
     msg_user = None
