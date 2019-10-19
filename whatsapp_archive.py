@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 
-"""Reads a WhatsApp conversation export file and writes a HTML file."""
+"""Reads email and WhatsApp conversation export files and writes a HTML file."""
 
 import argparse
+import email
+from email import policy
+import html
 import dateutil.parser
 import itertools
 import jinja2
@@ -15,80 +18,81 @@ DUPLICATE_TOLERANCE = 60    # seconds
 
 # Format of the standard WhatsApp export line. This is likely to change in the
 # future and so this application will need to be updated.
-TIME_RE = '(?P<time>[\d:]+( [AP]M)?)'
-WHATSAPP_RE = ('(?P<date>[.\d/-]+)'
+WA_TIME_RE = '(?P<time>[\d:]+( [AP]M)?)'
+WA_MESSAGE_RE = ('(?P<date>[.\d/-]+)'
                ',? ' +
-               TIME_RE +
+               WA_TIME_RE +
                '( -|:) '
                '(?P<name>[^:]+)'
                ': '
                '(?P<body>.*$)')
 
-FIRSTLINE_RE = ('(?P<date>[.\d/-]+)'
+WA_FIRSTLINE_RE = ('(?P<date>[.\d/-]+)'
                ',? ' +
-               TIME_RE +
+               WA_TIME_RE +
                '( -|:) '
                '(?P<body>.*$)')
 
 
+
 class Error(Exception):
     """Something bad happened."""
+    pass
 
 
-def ParseLine(line):
+class Users:
+    def __init__(self):
+        self.users = {}
+        self.id_gen = itertools.count(1)
+    
+    def id(self, name):
+        if name and name not in self.users:
+            self.users[name] = next(self.id_gen)
+        
+        return self.users.get(name, '')
+
+
+users = Users()
+
+
+def ParseWALine(line):
     """Parses a single line of WhatsApp export file."""
     
     # Try normal chat message
-    m = re.match(WHATSAPP_RE, line)
+    m = re.match(WA_MESSAGE_RE, line)
     if m:
         d = dateutil.parser.parse("%s %s" % (m.group('date'),
             m.group('time')), dayfirst=True)
         return d, m.group('name'), m.group('body')
     
     # Maybe it's the first line which doesn't contain a person's name.
-    m = re.match(FIRSTLINE_RE, line)
+    m = re.match(WA_FIRSTLINE_RE, line)
     if m:
         d = dateutil.parser.parse("%s %s" % (m.group('date'),
             m.group('time')), dayfirst=True)
         return d, "", m.group('body')
+    
     return None
 
 
-def IdentifyMessages(lines):
+def IdentifyWAMessages(lines):
     """Input text can contain multi-line messages. If there's a line that
     doesn't start with a date and a name, that's probably a continuation of the
     previous message and should be appended to it.
     """
     messages = []
-    users = {}
-    ids = itertools.count(1)
-    
-    def is_duplicate(msg_date, msg_user, msg_body):
-        for m in messages:
-            if (msg_user == m[1] and msg_body == m[2]):
-                delta = msg_date - m[0]  
-                if abs(delta.total_seconds()) <= DUPLICATE_TOLERANCE:
-                   return True
-        
-        return False
     
     def append_message(msg_date, msg_user, msg_body):
-        if is_duplicate(msg_date, msg_user, msg_body):
-            return
-        
-        # assign user id
-        if msg_user and msg_user not in users:
-            users[msg_user] = next(ids)
-        
-        msg = (msg_date, msg_user, msg_body, users.get(msg_user, ""))
+        msg = (msg_date, msg_user, msg_body, users.id(msg_user))
         messages.append(msg)
+
     
     msg_date = None
     msg_user = None
     msg_body = None
     
     for line in lines:
-        m = ParseLine(line)
+        m = ParseWALine(line)
         if m is not None:
             if msg_date is not None:
                 # We have a new message, so there will be no more lines for the
@@ -99,13 +103,75 @@ def IdentifyMessages(lines):
         else:
             if msg_date is None:
                 raise Error("Can't parse the first line: " + repr(line) +
-                        ', regexes are ' + repr(FIRSTLINE_RE) + ' and ' + repr(WHATSAPP_RE))
+                        ', regexes are ' + repr(WA_FIRSTLINE_RE) + 
+                        ' and ' + repr(WA_MESSAGE_RE))
             msg_body += '\n' + line.strip()
     
     # The last message remains. Let's add it, if it exists.
     if msg_date is not None:
         append_message(msg_date, msg_user, msg_body)
     
+    return messages
+
+
+def IdentifyEmailMessage(text):
+    m = email.message_from_string(text, policy=policy.default)
+    
+    if 'From' in m:
+        
+        ### # debug
+        ### print("TYPE:", type(m))
+        ### for k in m.keys():
+        ###     print("ATTR: {}={}".format(k, m[k]))
+        ### print("MESSAGE MULTIPART:", m.is_multipart())
+        ### for part in m.walk():
+        ###     print("PART MULTIPART:", 
+        ###         part.get_content_maintype() == 'multipart', 
+        ###         part.is_multipart())
+
+        msg_date = dateutil.parser.parse(m.get('Date'))
+        msg_user = html.escape(m.get('From'))
+        msg_body = jinja2.Markup(
+            m.get_body(preferencelist=('plain', 'html')).get_content())
+        
+        return (msg_date, msg_user, msg_body, users.id(msg_user))
+    
+    return None
+
+
+def IdentifyMessages(text):
+    message = IdentifyEmailMessage(text)
+    if message is not None:
+        return [ message ]
+        
+    return IdentifyWAMessages(text.splitlines(True))
+
+
+def ProcessInputFiles(input_files):
+    messages = []
+    
+    def is_duplicate(msg_date, msg_user, msg_body):
+        for m in messages:
+            if (msg_user == m[1] and msg_body == m[2]):
+                delta = msg_date - m[0]  
+                if abs(delta.total_seconds()) <= DUPLICATE_TOLERANCE:
+                   return True
+        
+        return False
+    
+    
+    def append_message(msg):
+        if is_duplicate(msg[0], msg[1], msg[2]):
+            return
+        
+        messages.append(msg)
+    
+    
+    for input_file in input_files:
+        with open(input_file, 'rt', encoding='utf-8-sig') as fd:
+            for nm in IdentifyMessages(fd.read()):
+                append_message(nm)
+            
     return messages
 
 
@@ -169,32 +235,33 @@ def FormatHTML(data, css):
     return jinja2.Environment().from_string(tmpl).render(**data)
 
 
-def main():    
-    parser = argparse.ArgumentParser(description='Produce a browsable history '
-            'of a WhatsApp conversation')
+def ParseArguments():   
+    parser = argparse.ArgumentParser(
+        description='Produce a browsable history of a email '
+                    'and WhatsApp conversation')
     parser.add_argument('-c', dest='collate', action='store_true',
-                        help='if subsequent messages of same user should be combined')
+                        help='if subsequent messages of same user '
+                             'should be combined')
     parser.add_argument('-s', dest='style_file', required=False, 
                         default=DEFAULT_CSS,
-                        help='optional style file other than "' + DEFAULT_CSS + '"')
+                        help='optional style file other than '
+                             '"' + DEFAULT_CSS + '"')
     parser.add_argument('-i', dest='input_file', nargs='*', required=True)
     parser.add_argument('-o', dest='output_file', required=True)
-    args = parser.parse_args()
     
-    lines = []
-    for input_file in args.input_file:
-        with open(input_file, 'rt', encoding='utf-8-sig') as fd:
-            lines += fd.readlines()
-    messages = IdentifyMessages(lines)
+    return parser.parse_args()
+
+
+def main(): 
+    args = ParseArguments()
     
+    messages = ProcessInputFiles(args.input_file)
+    template_data = TemplateData(messages, args.input_file, args.collate)
     with open(args.style_file, 'rt', encoding='utf-8-sig') as fd:
         css = fd.read()
-    
-    template_data = TemplateData(messages, args.input_file, args.collate)
-    HTML = FormatHTML(template_data, css)
-    
+    html = FormatHTML(template_data, css)
     with open(args.output_file, 'w', encoding='utf-8') as fd:
-        fd.write(HTML)
+        fd.write(html)
 
 
 if __name__ == '__main__':

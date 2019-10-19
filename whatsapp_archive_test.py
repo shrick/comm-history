@@ -22,21 +22,21 @@ INPUT_5 = ["19-02-18 17:02 - Los mensajes y llamadas en este chat ahora están "
 # 12-hour format.
 INPUT_6 = ["2016-06-27, 8:04:08 AM: Neil: Hi\n",]
 
-class IdentifyMessagesTest(unittest.TestCase):
+class IdentifyWAMessagesTest(unittest.TestCase):
 
-    def testInputMultiline(self):
-        self.assertEqual(whatsapp_archive.IdentifyMessages(INPUT_1), [
+    def test1_InputMultiline(self):
+        self.assertEqual(whatsapp_archive.IdentifyWAMessages(INPUT_1), [
             (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1),
         ])
 
-    def testInputTwoMultiline(self):
-        self.assertEqual(whatsapp_archive.IdentifyMessages(INPUT_2), [
+    def test2_InputTwoMultiline(self):
+        self.assertEqual(whatsapp_archive.IdentifyWAMessages(INPUT_2), [
             (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1),
             (datetime.datetime(2018, 1, 13, 1, 24), 'Name Two', 'single line', 2),
         ])
 
-    def testTemplateData(self):
-        messages = whatsapp_archive.IdentifyMessages(INPUT_3)
+    def test3_TemplateData(self):
+        messages = whatsapp_archive.IdentifyWAMessages(INPUT_3)
         template_data = whatsapp_archive.TemplateData(messages, ["fake_filename"])
         self.assertEqual(template_data, {
             'by_user': [
@@ -52,7 +52,7 @@ class IdentifyMessagesTest(unittest.TestCase):
             'input_full_paths': ['fake_filename']})
 
     def testTemplateDataNoCollate(self):
-        messages = whatsapp_archive.IdentifyMessages(INPUT_3)
+        messages = whatsapp_archive.IdentifyWAMessages(INPUT_3)
         template_data = whatsapp_archive.TemplateData(messages, ["fake_filename"], False)
         self.assertEqual(template_data, {
             'by_user': [
@@ -69,8 +69,8 @@ class IdentifyMessagesTest(unittest.TestCase):
             'input_basenames': ['fake_filename'],
             'input_full_paths': ['fake_filename']})
 
-    def testFirstLineNoColon(self):
-        messages = whatsapp_archive.IdentifyMessages(INPUT_4)
+    def test4_FirstLineNoColon(self):
+        messages = whatsapp_archive.IdentifyWAMessages(INPUT_4)
         template_data = whatsapp_archive.TemplateData(messages, ["fake_filename"])
         self.assertEqual(template_data, {
             'by_user': [
@@ -78,15 +78,15 @@ class IdentifyMessagesTest(unittest.TestCase):
                     (datetime.datetime(2018, 4, 14, 22, 8), '', 'Nesta conversa, (…)', ''),
                 ]),
                 ('Alguém', [
-                    (datetime.datetime(2018, 4, 14, 22, 8), 'Alguém', 'Olá!', 1),
+                    (datetime.datetime(2018, 4, 14, 22, 8), 'Alguém', 'Olá!', 3),
                 ]),
               ],
               'input_basenames': ['fake_filename'],
               'input_full_paths': ['fake_filename']})
 
-    def testDifferentFormat(self):
+    def test5_DifferentFormat(self):
         self.maxDiff = None
-        messages = whatsapp_archive.IdentifyMessages(INPUT_5)
+        messages = whatsapp_archive.IdentifyWAMessages(INPUT_5)
         template_data = whatsapp_archive.TemplateData(messages, ["fake_filename"])
         self.assertEqual(template_data, {
             'by_user': [
@@ -97,24 +97,24 @@ class IdentifyMessagesTest(unittest.TestCase):
                         'Toca para más información.', ''),
                 ]),
                 ('human1', [
-                    (datetime.datetime(2018, 2, 19, 17, 2), 'human1', 'Hola', 1),
+                    (datetime.datetime(2018, 2, 19, 17, 2), 'human1', 'Hola', 4),
                 ]),
                 ('human2', [
-                    (datetime.datetime(2018, 2, 19, 17, 14), 'human2', 'como estás?', 2),
+                    (datetime.datetime(2018, 2, 19, 17, 14), 'human2', 'como estás?', 5),
                 ]),
               ],
               'input_basenames': ['fake_filename'],
               'input_full_paths': ['fake_filename']})
 
-    def testNeil(self):
+    def test6_Neil(self):
         self.maxDiff = None
-        messages = whatsapp_archive.IdentifyMessages(INPUT_6)
+        messages = whatsapp_archive.IdentifyWAMessages(INPUT_6)
         template_data = whatsapp_archive.TemplateData(messages, ["fake_filename"])
         self.assertEqual(template_data, {
             'by_user': [
                 ('Neil', [
                     (datetime.datetime(2016, 6, 27, 8, 4, 8),
-                        'Neil', 'Hi', 1),
+                        'Neil', 'Hi', 6),
                 ]),
               ],
               'input_basenames': ['fake_filename'],
