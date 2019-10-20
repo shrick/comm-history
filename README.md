@@ -19,37 +19,37 @@ Then run this script.
 
 ## SYNOPSIS
 
-  comm_history.py [-s <style_file>] [-c] -o <output_file> -i <input_file1 [input_file2 ...]>
+    comm_history.py [-s <style_file>] [-c] -o <output_file> -i <input_file1 [input_file2 ...]>
     
 With options as follows:
 
-  -s <style_file>
+    -s <style_file>
   
 Optional CSS style file to use instead of the bundled default.
 
-  -c
+    -c
   
 Collate subsequent messages by same user.
-  
-  -o <output_file>
+
+    -o <output_file>
   
 The HTML conversation file to write.
   
-  -i <input_file1 [input_file2 ...]>
+    -i <input_file1 [input_file2 ...]>
   
 The text input files. You can mix WhatsApp and email export files. But files are read in the order as given on command line. i.e. conversation is NOT ordered by date.
 
 ## TODOs
 
 Email integration tasks:
-[x] rename files
-[ ] rename GitHub project
-[ ] order messages by date
-[ ] add message type to apply different formats
-[ ] parse multiple emails in single text file
-[ ] strip email signature
+- [x] rename files
+- [x] rename GitHub project
+- [ ] order messages by date
+- [ ] add message type to apply different formats
+- [ ] parse multiple emails in single text file
+- [ ] strip email signature
 
 Common tasks:
-[ ] change message tuples into named tuples
-[ ] efficient duplication check
-[ ] restructure app layout
+- [ ] change message tuples into named tuples
+- [ ] efficient duplication check
+- [ ] restructure app layout
