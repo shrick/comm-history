@@ -11,6 +11,7 @@ import itertools
 import jinja2
 import os.path
 import re
+from collections import namedtuple
 
 
 DEFAULT_CSS = "default.css"
@@ -53,6 +54,7 @@ class Users:
 
 
 users = Users()
+Message = namedtuple('Message', 'date user body id')
 
 
 def ParseWALine(line):
@@ -83,7 +85,7 @@ def IdentifyWAMessages(lines):
     messages = []
     
     def append_message(msg_date, msg_user, msg_body):
-        msg = (msg_date, msg_user, msg_body, users.id(msg_user))
+        msg = Message(msg_date, msg_user, msg_body, users.id(msg_user))
         messages.append(msg)
 
     
@@ -134,7 +136,7 @@ def IdentifyEmailMessage(text):
         msg_body = jinja2.Markup(
             m.get_body(preferencelist=('plain', 'html')).get_content())
         
-        return (msg_date, msg_user, msg_body, users.id(msg_user))
+        return Message(msg_date, msg_user, msg_body, users.id(msg_user))
     
     return None
 
@@ -169,10 +171,10 @@ def ProcessInputFiles(input_files):
     
     for input_file in input_files:
         with open(input_file, 'rt', encoding='utf-8-sig') as fd:
-            for nm in IdentifyMessages(fd.read()):
-                append_message(nm)
+            for msg in IdentifyMessages(fd.read()):
+                append_message(msg)
     
-    messages.sort(key=lambda m: m[0])
+    messages.sort(key=lambda m: m.date)
             
     return messages
 
@@ -187,11 +189,11 @@ def TemplateData(messages, input_filenames, collate=True):
                       for f in input_filenames]
     
     if collate:
-        for user, msgs_of_user in itertools.groupby(messages, lambda x: x[1]):
+        for user, msgs_of_user in itertools.groupby(messages, lambda m: m.user):
             by_user.append((user, list(msgs_of_user)))
     else:
         for msg in messages:
-            by_user.append((msg[1], [msg]))
+            by_user.append((msg.user, [msg]))
     
     return dict(by_user=by_user, input_basenames=file_basenames,
                 input_full_paths=input_filenames)
@@ -214,14 +216,14 @@ def FormatHTML(data, css):
         {% for user, messages in by_user %}
             <div class="bubble">
                 <div class="txt">
-                    <p class="name"><span class="user{{ messages[0][3] }}">{{ user }}</span></p>
+                    <p class="name"><span class="user{{ messages[0].id }}">{{ user }}</span></p>
                     {% for message in messages %}
                     <div class="message">
                         <p>
-                        {% for line in message[2].split("\n") %}
+                        {% for line in message.body.split("\n") %}
                             {{ line | e }}<br>
                         {% endfor %}
-                            <span class="timestamp">{{ message[0] }}</span>
+                            <span class="timestamp">{{ message.date }}</span>
                         </p>
                     </div>
                     {% endfor %}

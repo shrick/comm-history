@@ -45,11 +45,12 @@ Email integration tasks:
 - [x] rename files
 - [x] rename GitHub project
 - [x] order messages by date
-- [ ] add message type to apply different formats
+- [ ] add message type
+- [ ] apply different message type formats
 - [ ] parse multiple emails in single text file
 - [ ] strip email signature
 
 Common tasks:
-- [ ] change message tuples into named tuples
+- [x] change message tuples into named tuples
 - [ ] efficient duplication check
 - [ ] restructure app layout
