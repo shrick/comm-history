@@ -44,7 +44,7 @@ The text input files. You can mix WhatsApp and email export files. But files are
 Email integration tasks:
 - [x] rename files
 - [x] rename GitHub project
-- [ ] order messages by date
+- [x] order messages by date
 - [ ] add message type to apply different formats
 - [ ] parse multiple emails in single text file
 - [ ] strip email signature

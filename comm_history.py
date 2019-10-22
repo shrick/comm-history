@@ -129,7 +129,7 @@ def IdentifyEmailMessage(text):
         ###         part.get_content_maintype() == 'multipart', 
         ###         part.is_multipart())
 
-        msg_date = dateutil.parser.parse(m.get('Date'))
+        msg_date = dateutil.parser.parse(m.get('Date'), ignoretz=True)
         msg_user = html.escape(m.get('From'))
         msg_body = jinja2.Markup(
             m.get_body(preferencelist=('plain', 'html')).get_content())
@@ -171,6 +171,8 @@ def ProcessInputFiles(input_files):
         with open(input_file, 'rt', encoding='utf-8-sig') as fd:
             for nm in IdentifyMessages(fd.read()):
                 append_message(nm)
+    
+    messages.sort(key=lambda m: m[0])
             
     return messages
 
