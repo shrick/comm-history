@@ -54,7 +54,7 @@ class Users:
 
 
 users = Users()
-Message = namedtuple('Message', 'date user body id')
+Message = namedtuple('Message', 'date user body id type')
 
 
 def ParseWALine(line):
@@ -85,7 +85,7 @@ def IdentifyWAMessages(lines):
     messages = []
     
     def append_message(msg_date, msg_user, msg_body):
-        msg = Message(msg_date, msg_user, msg_body, users.id(msg_user))
+        msg = Message(msg_date, msg_user, msg_body, users.id(msg_user), 'whatsapp')
         messages.append(msg)
 
     
@@ -136,7 +136,7 @@ def IdentifyEmailMessage(text):
         msg_body = jinja2.Markup(
             m.get_body(preferencelist=('plain', 'html')).get_content())
         
-        return Message(msg_date, msg_user, msg_body, users.id(msg_user))
+        return Message(msg_date, msg_user, msg_body, users.id(msg_user), 'email')
     
     return None
 

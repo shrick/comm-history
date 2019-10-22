@@ -26,13 +26,13 @@ class IdentifyWAMessagesTest(unittest.TestCase):
 
     def test1_InputMultiline(self):
         self.assertEqual(comm_history.IdentifyWAMessages(INPUT_1), [
-            (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1),
+            (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1, 'whatsapp'),
         ])
 
     def test2_InputTwoMultiline(self):
         self.assertEqual(comm_history.IdentifyWAMessages(INPUT_2), [
-            (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1),
-            (datetime.datetime(2018, 1, 13, 1, 24), 'Name Two', 'single line', 2),
+            (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1, 'whatsapp'),
+            (datetime.datetime(2018, 1, 13, 1, 24), 'Name Two', 'single line', 2, 'whatsapp'),
         ])
 
     def test3_TemplateData(self):
@@ -41,11 +41,11 @@ class IdentifyWAMessagesTest(unittest.TestCase):
         self.assertEqual(template_data, {
             'by_user': [
                 ('Fake Name', [
-                    (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1),
-                    (datetime.datetime(2018, 1, 13, 1, 24), 'Fake Name', 'line3', 1)
+                    (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1, 'whatsapp'),
+                    (datetime.datetime(2018, 1, 13, 1, 24), 'Fake Name', 'line3', 1, 'whatsapp')
                 ]),
                 ('Name Two', [
-                    (datetime.datetime(2018, 1, 13, 1, 25), 'Name Two', 'single line', 2)
+                    (datetime.datetime(2018, 1, 13, 1, 25), 'Name Two', 'single line', 2, 'whatsapp')
                 ])
             ],
             'input_basenames': ['fake_filename'],
@@ -57,13 +57,13 @@ class IdentifyWAMessagesTest(unittest.TestCase):
         self.assertEqual(template_data, {
             'by_user': [
                 ('Fake Name', [
-                    (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1)
+                    (datetime.datetime(2018, 1, 13, 1, 23), 'Fake Name', 'line1\nline2', 1, 'whatsapp')
                 ]),
                 ('Fake Name', [
-                    (datetime.datetime(2018, 1, 13, 1, 24), 'Fake Name', 'line3', 1)
+                    (datetime.datetime(2018, 1, 13, 1, 24), 'Fake Name', 'line3', 1, 'whatsapp')
                 ]),
                 ('Name Two', [
-                    (datetime.datetime(2018, 1, 13, 1, 25), 'Name Two', 'single line', 2)
+                    (datetime.datetime(2018, 1, 13, 1, 25), 'Name Two', 'single line', 2, 'whatsapp')
                 ])
             ],
             'input_basenames': ['fake_filename'],
@@ -75,10 +75,10 @@ class IdentifyWAMessagesTest(unittest.TestCase):
         self.assertEqual(template_data, {
             'by_user': [
                 ('', [
-                    (datetime.datetime(2018, 4, 14, 22, 8), '', 'Nesta conversa, (…)', ''),
+                    (datetime.datetime(2018, 4, 14, 22, 8), '', 'Nesta conversa, (…)', '', 'whatsapp'),
                 ]),
                 ('Alguém', [
-                    (datetime.datetime(2018, 4, 14, 22, 8), 'Alguém', 'Olá!', 3),
+                    (datetime.datetime(2018, 4, 14, 22, 8), 'Alguém', 'Olá!', 3, 'whatsapp'),
                 ]),
               ],
               'input_basenames': ['fake_filename'],
@@ -94,13 +94,13 @@ class IdentifyWAMessagesTest(unittest.TestCase):
                     (datetime.datetime(2018, 2, 19, 17, 2),
                         '', 'Los mensajes y llamadas en este chat ahora '
                         'están protegidos con cifrado de extremo a extremo. '
-                        'Toca para más información.', ''),
+                        'Toca para más información.', '', 'whatsapp'),
                 ]),
                 ('human1', [
-                    (datetime.datetime(2018, 2, 19, 17, 2), 'human1', 'Hola', 4),
+                    (datetime.datetime(2018, 2, 19, 17, 2), 'human1', 'Hola', 4, 'whatsapp'),
                 ]),
                 ('human2', [
-                    (datetime.datetime(2018, 2, 19, 17, 14), 'human2', 'como estás?', 5),
+                    (datetime.datetime(2018, 2, 19, 17, 14), 'human2', 'como estás?', 5, 'whatsapp'),
                 ]),
               ],
               'input_basenames': ['fake_filename'],
@@ -114,7 +114,7 @@ class IdentifyWAMessagesTest(unittest.TestCase):
             'by_user': [
                 ('Neil', [
                     (datetime.datetime(2016, 6, 27, 8, 4, 8),
-                        'Neil', 'Hi', 6),
+                        'Neil', 'Hi', 6, 'whatsapp'),
                 ]),
               ],
               'input_basenames': ['fake_filename'],
