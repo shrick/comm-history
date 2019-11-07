@@ -37,7 +37,7 @@ The HTML conversation file to write.
   
     -i <input_file1 [input_file2 ...]>
   
-The text input files. You can mix WhatsApp and email export files. But files are read in the order as given on command line. i.e. conversation is NOT ordered by date.
+The text input files. You can mix WhatsApp and email export files and the order is not important.
 
 ## TODOs
 
@@ -52,5 +52,5 @@ Email integration tasks:
 
 Common tasks:
 - [x] change message tuples into named tuples
-- [ ] efficient duplication check
+- [x] efficient duplicates check
 - [ ] restructure app layout

@@ -11,7 +11,7 @@ import itertools
 import jinja2
 import os.path
 import re
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 
 DEFAULT_CSS = "default.css"
@@ -151,23 +151,20 @@ def IdentifyMessages(text):
 
 def ProcessInputFiles(input_files):
     messages = []
+    indexes = defaultdict(list)
     
-    def is_duplicate(msg_date, msg_user, msg_body):
-        for m in messages:
-            if (msg_user == m[1] and msg_body == m[2]):
-                delta = msg_date - m[0]  
-                if abs(delta.total_seconds()) <= DUPLICATE_TOLERANCE:
-                   return True
+    def is_duplicate(msg):
+        for i in indexes[(msg.user, msg.body)]:
+            delta = msg.date - messages[i].date 
+            if abs(delta.total_seconds()) <= DUPLICATE_TOLERANCE:
+               return True
         
         return False
     
-    
     def append_message(msg):
-        if is_duplicate(msg[0], msg[1], msg[2]):
-            return
-        
-        messages.append(msg)
-    
+        if not is_duplicate(msg):
+            messages.append(msg)
+            indexes[(msg.user, msg.body)].append(len(messages) - 1)
     
     for input_file in input_files:
         with open(input_file, 'rt', encoding='utf-8-sig') as fd:
